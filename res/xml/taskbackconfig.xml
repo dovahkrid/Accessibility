@@ -13,11 +13,15 @@
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
- -->
+-->
 
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeAllMask"
     android:accessibilityFeedbackType="feedbackSpoken"
-    android:notificationTimeout="100"
+    android:accessibilityFlags="flagReportViewIds|flagRequestEnhancedWebAccessibility|flagRequestFilterKeyEvents|flagRequestTouchExplorationMode"
+    android:canRequestEnhancedWebAccessibility="true"
+    android:canRequestFilterKeyEvents="true"
     android:canRetrieveWindowContent="true"
-    android:description="@string/app_name" />
+    android:description="@string/app_name"
+    android:notificationTimeout="100" />
+<!-- android:android:canRequestTouchExplorationMode="true" -->
