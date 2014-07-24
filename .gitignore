@@ -25,3 +25,4 @@ proguard/
 # eclipse
 .settings/
 .classpath
+project.properties
