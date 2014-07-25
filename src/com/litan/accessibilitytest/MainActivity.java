@@ -1,19 +1,18 @@
 
 package com.litan.accessibilitytest;
 
-import java.util.List;
-
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.ListView;
+import android.widget.Button;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -66,15 +65,18 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
+            Button bt = new Button(getActivity());
+            bt.setText("show view");
+            bt.setOnClickListener(new OnClickListener(){
 
-            PackageManager pm = getActivity().getPackageManager();
-            List<PackageInfo> installedPackages = pm.getInstalledPackages(0);
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            ListView listView = (ListView) rootView.findViewById(android.R.id.list);
-            AppListAdapter adapter = new AppListAdapter(getActivity(), pm, installedPackages);
-            listView.setOnItemClickListener(adapter);
-            listView.setAdapter(adapter);
-            return rootView;
+                @Override
+                public void onClick(View v) {
+                    LocalBroadcastManager mgr = LocalBroadcastManager.getInstance(getActivity());
+                    mgr.sendBroadcast(new Intent("show.window"));
+                }
+                
+            });
+            return bt;
         }
     }
 
