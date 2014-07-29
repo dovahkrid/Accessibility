@@ -3,6 +3,8 @@ package com.litan.accessibilitytest;
 
 import java.util.List;
 
+import com.litan.accessibilitytest.AccessRecordManager.PerfomListener;
+
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.BroadcastReceiver;
@@ -13,7 +15,10 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.RemoteException;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -34,21 +39,6 @@ public class AccessibilityTestService extends AccessibilityService {
     private boolean mViewAdded;
     private AccessRecordManager mMgr = new AccessRecordManager.AccessRecordManagerImpl();
 
-    private class MyButton extends Button {
-
-        public MyButton(Context context) {
-            super(context);
-        }
-
-//        @Override
-//        public boolean onTouchEvent(MotionEvent event) {
-//            boolean result = super.onTouchEvent(event);
-//            //mLinearLayout.onTouchEvent(event);
-//            return false;
-//        }
-
-    }
-
     private void log(AccessibilityNodeInfo node, int level) {
         if (node == null) {
             return;
@@ -62,86 +52,34 @@ public class AccessibilityTestService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        logi("onAccessibilityEvent:" + event.getWindowId() + " " + event);
-        log(event.getSource(), 0);
-        if (mStarted) {
-            mMgr.record(event);
+        logi("onAccessibilityEvent:" + event.getWindowId() + " " + AccessibilityEvent.eventTypeToString(event.getEventType()));
+        if (TextUtils.isEmpty(mCurPkg)) {
+            logv("onAccessibilityEvent:cant not find curPkg");
             return;
         }
-        if (mPerform) {
-            mMgr.perfrom(event);
-            if (!mMgr.hasRecords()) {
-                mPerform = false;
+        int type = event.getEventType();
+        if (AccessibilityEvent.TYPE_VIEW_CLICKED == type || AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED == type || AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED == type) {
+            String eventPkgName = event.getPackageName().toString();
+            if (mStarted) {
+                if (eventPkgName.equals(mCurPkg)) {
+                    log(event.getSource(), 0);
+                    mMgr.record(event);
+                } else {
+                    loge("onAccessibilityEvent(RECORD:event pkg name not consistent curPkgName:" + mCurPkg + " event:" + eventPkgName);
+                }
+            }  else  if (mPerform) {
+                if (eventPkgName.equals(mCurPkg)) {
+                    mMgr.perfrom(event);
+//                    if (!mMgr.hasRecords()) {
+//                        mPerform = false;
+//                    }
+                } else {
+                    loge("onAccessibilityEvent(PERFORM):event pkg name not consistent curPkgName:" + mCurPkg + " event:" + eventPkgName);
+                }
             }
+        } else {
+            logw("onAccessibilityEvent:unsupported type:" + AccessibilityEvent.eventTypeToString(type));
         }
-        // AccessibilityNodeInfo source = event.getSource();
-        // if (source == null) {
-        // logv("No source node");
-        // return;
-        // } else {
-        // log(source, 0);
-        // if (AccessibilityEvent.TYPE_VIEW_CLICKED == event.getEventType()
-        // &&
-        // "com.netease.mobimail:id/domain_163".equals(source.getViewIdResourceName()))
-        // {
-        // m163Clicked = true;
-        // return;
-        // }
-        // if (AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ==
-        // event.getEventType()) {
-        // if
-        // ("com.netease.mobimail.activity.LoginActivity".equals(event.getClassName()))
-        // {
-        // m163Clicked = false;
-        // return;
-        // } else {
-        // AccessibilityNodeInfo account = findNode(source, new String[] {
-        // "com.netease.mobimail:id/editor_email"
-        // }, "");
-        // AccessibilityNodeInfo password = findNode(source, new String[] {
-        // "com.netease.mobimail:id/editor_password"
-        // }, "");
-        // if (m163Clicked && account != null && password != null) {
-        // if (!mViewAdded) {
-        // mWindowManager.addView(mLinearLayout, mLayoutParams);
-        // }
-        // mViewAdded = true;
-        //
-        // // ClipboardManager mgr = (ClipboardManager)
-        // // getSystemService(Context.CLIPBOARD_SERVICE);
-        // // mgr.setText("liyan12167");
-        // // account.performAction(AccessibilityNodeInfo.ACTION_PASTE);
-        // // password.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
-        // // mPasswordWaitingForFocusd = true;
-        // return;
-        // }
-        // }
-        // // AccessibilityNodeInfo node = findNode(source, new
-        // // String[]{"com.netease.mobimail:id/domain_163"}, "");
-        // // if (node != null) {
-        // //
-        // // }
-        // return;
-        // } else if (AccessibilityEvent.TYPE_VIEW_FOCUSED ==
-        // event.getEventType()) {
-        // if (mPasswordWaitingForFocusd
-        // && "com.netease.mobimail:id/editor_password".equals(source
-        // .getViewIdResourceName())) {
-        // ClipboardManager mgr = (ClipboardManager)
-        // getSystemService(Context.CLIPBOARD_SERVICE);
-        // mgr.setText("Jz5855657");
-        // source.performAction(AccessibilityNodeInfo.ACTION_PASTE);
-        // mPasswordWaitingForFocusd = false;
-        // }
-        // } else if (AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED ==
-        // event.getEventType()) {
-        // // if (source.isScrollable()) {
-        // // boolean success =
-        // source.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
-        // // logi("litan ACTION_SCROLL_FORWARD:" + success);
-        // // }
-        // }
-        // }
     }
 
     public static AccessibilityNodeInfo findNode(AccessibilityNodeInfo source, String[] ids,
@@ -208,24 +146,31 @@ public class AccessibilityTestService extends AccessibilityService {
                 Toast toast = Toast.makeText(AccessibilityTestService.this, "", Toast.LENGTH_SHORT);
                 switch (v.getId()) {
                     case 0:
-                        Button bt = (Button) v;
-                        if (mStarted) {
-                            toast.setText("stop clicked");
-                            bt.setText("start");
-                            mStarted = false;
-                            mWindowManager.removeView(mLinearLayout);
-                            mViewAdded = false;
-                        } else {
-                            toast.setText("start clicked");
-                            bt.setText("stop");
-                            mStarted = true;
-                        }
+                        toast.setText("complete clicked");
+                        mCurPkg = "";
+                        mMgr.recordComplete();
+                        mStarted = false;
+                      mWindowManager.removeView(mLinearLayout);
+                      mViewAdded = false;
+                        //Button bt = (Button) v;
+//                        if (mStarted) {
+//                            toast.setText("stop clicked");
+//                            bt.setText("start");
+//                            mStarted = false;
+//                            mWindowManager.removeView(mLinearLayout);
+//                            mViewAdded = false;
+//                        } else {
+//                            toast.setText("start clicked");
+//                            bt.setText("stop");
+//                            mStarted = true;
+//                        }
                         break;
                     case 1:
                         toast.setText("cancel clicked");
                         mWindowManager.removeView(mLinearLayout);
                         mViewAdded = false;
-                        mMgr.cancel();
+                        mCurPkg = "";
+                        //mMgr.cancel();
                         break;
                     case 2:
                         toast.setText("perform clicked");
@@ -234,21 +179,21 @@ public class AccessibilityTestService extends AccessibilityService {
                 toast.show();
             }
         };
-        Button ok = new MyButton(this);
-        ok.setText("start");
+        Button ok = new Button(this);
+        ok.setText("complete");
         ok.setId(0);
         ok.setOnClickListener(listener);
-        Button cancel = new MyButton(this);
+        Button cancel = new Button(this);
         cancel.setText("cancel");
         cancel.setId(1);
         cancel.setOnClickListener(listener);
-        Button perform = new MyButton(this);
-        perform.setText("perfrom");
-        perform.setId(2);
-        perform.setOnClickListener(listener);
+//        Button perform = new Button(this);
+//        perform.setText("perfrom");
+//        perform.setId(2);
+//        perform.setOnClickListener(listener);
         mLinearLayout.addView(ok);
         mLinearLayout.addView(cancel);
-        mLinearLayout.addView(perform);
+//        mLinearLayout.addView(perform);
         mLinearLayout.setBackgroundColor(Color.BLUE);
         mLinearLayout.setOnTouchListener(new OnTouchListener() {
             boolean isMove = false;
@@ -328,27 +273,47 @@ public class AccessibilityTestService extends AccessibilityService {
     }
 
     private int mScreenWidth, mScreenHeight;
+    //private Set<String> mPkgSet = new HashSet<String>();
+    private String mCurPkg = "";
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (mViewAdded) {
-                Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
-                        .show();
-                ;
-            } else {
-                mWindowManager.addView(mLinearLayout, mLayoutParams);
-                mViewAdded = true;
+            if (ACTION_SHOW_WINDOW.equals(intent.getAction())) {
+                if (mViewAdded) {
+                    Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
+                    .show();
+                } else {
+                    mWindowManager.addView(mLinearLayout, mLayoutParams);
+                    mViewAdded = true;
+                }
+            } else if (ACTION_START_RECORD.equals(intent.getAction())) {
+                String pkg = intent.getStringExtra("pkg");
+                AccessibilityServiceInfo serviceInfo = getServiceInfo();
+                serviceInfo.packageNames = new String[]{pkg};
+                setServiceInfo(serviceInfo);
+                mCurPkg = pkg;
+                mStarted = true;
+                if (mViewAdded) {
+                    Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
+                    .show();
+                } else {
+                    mWindowManager.addView(mLinearLayout, mLayoutParams);
+                    mViewAdded = true;
+                }
             }
         }
     };
 
+    public static final String ACTION_SHOW_WINDOW = "action.show.window";
+    public static final String ACTION_START_RECORD = "action.start.record";
     @Override
     public void onCreate() {
         initWindowManager();
         LocalBroadcastManager mgr = LocalBroadcastManager.getInstance(this);
         IntentFilter filter = new IntentFilter();
-        filter.addAction("show.window");
+        filter.addAction(ACTION_SHOW_WINDOW);
+        filter.addAction(ACTION_START_RECORD);
         mgr.registerReceiver(mReceiver, filter);
     }
 
@@ -358,30 +323,82 @@ public class AccessibilityTestService extends AccessibilityService {
         LocalBroadcastManager mgr = LocalBroadcastManager.getInstance(this);
         mgr.unregisterReceiver(mReceiver);
     }
+private class AccessTestService extends IAccessTestService.Stub {
 
+    @Override
+    public void startRecord(String pkg) throws RemoteException {
+        AccessibilityServiceInfo serviceInfo = getServiceInfo();
+        serviceInfo.packageNames = new String[]{pkg};
+        setServiceInfo(serviceInfo);
+        mCurPkg = pkg;
+        mStarted = true;
+        if (mViewAdded) {
+            Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
+            .show();
+        } else {
+            mWindowManager.addView(mLinearLayout, mLayoutParams);
+            mViewAdded = true;
+        }
+    }
+
+    @Override
+    public List<String> getRecordedPkg() throws RemoteException {
+        return mMgr.getRecored();
+    }
+
+    @Override
+    public void startPerform(String pkg) throws RemoteException {
+        if (mStarted) {
+            Toast.makeText(AccessibilityTestService.this, "already in record time", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (mPerform) {
+            Toast.makeText(AccessibilityTestService.this, "already in perform time", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mPerform = true;
+        mCurPkg = pkg;
+        boolean success = mMgr.preparePerform(pkg, new PerfomListener() {
+            
+            @Override
+            public void onComplete() {
+               Toast.makeText(AccessibilityTestService.this, "Perform complete", Toast.LENGTH_SHORT).show();
+               mPerform = false;
+               mCurPkg = "";
+            }
+        });
+        Toast.makeText(AccessibilityTestService.this, "preparePerform " + (success ? "success" : "failed"), Toast.LENGTH_SHORT).show();
+    }
+    
+}
     @Override
     public void onServiceConnected() {
         logi("onServiceConnected");
-        AccessibilityServiceInfo serviceInfo = getServiceInfo();
-        logi("serviceInfo:" + serviceInfo);
-        serviceInfo.packageNames = new String[]{"com.android.settings"};
-        setServiceInfo(serviceInfo);
-        logi("set serviceInfo:" + getServiceInfo());
+        LocalBroadcastManager mgr = LocalBroadcastManager.getInstance(this);
+        Intent intent = new Intent("action.binder");
+        Bundle bundle = new Bundle();
+        bundle.putBinder("binder",new AccessTestService());
+        intent.putExtra("bundle", bundle);
+        mgr.sendBroadcast(intent);
     }
 
-    private static void logd(String msg) {
+    static void logd(String msg) {
         Log.d(TAG, msg);
     }
 
-    private static void logw(String msg) {
+     static void logw(String msg) {
         Log.w(TAG, msg);
     }
 
-    private static void logi(String msg) {
+    static void loge(String msg) {
+        Log.e(TAG, msg);
+    }
+    
+    static void logi(String msg) {
         Log.i(TAG, msg);
     }
 
-    private static void logv(String msg) {
+    static void logv(String msg) {
         Log.v(TAG, msg);
     }
 }

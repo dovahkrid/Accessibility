@@ -3,6 +3,7 @@
 
     <string name="app_name">AccessibilityTest</string>
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_start_record">start record</string>
+    <string name="action_start_perform">start perfrom</string>
 
 </resources>

@@ -23,5 +23,6 @@
     android:canRequestFilterKeyEvents="true"
     android:canRetrieveWindowContent="true"
     android:description="@string/app_name"
+     android:packageNames="com.android.settings"
     android:notificationTimeout="100" />
 <!-- android:android:canRequestTouchExplorationMode="true" android:packageNames="com.netease.mobimail,com.android.settings"-->
