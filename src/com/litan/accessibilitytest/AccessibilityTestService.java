@@ -3,8 +3,6 @@ package com.litan.accessibilitytest;
 
 import java.util.List;
 
-import com.litan.accessibilitytest.AccessRecordManager.PerfomListener;
-
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.BroadcastReceiver;
@@ -32,7 +30,10 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.litan.accessibilitytest.AccessRecordManager.PerfomListener;
 
 public class AccessibilityTestService extends AccessibilityService {
     private static final String TAG = "litan";
@@ -49,7 +50,7 @@ public class AccessibilityTestService extends AccessibilityService {
             log(n, level + 1);
         }
     }
-
+    private int mSizeRecordAdded;
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         logi("onAccessibilityEvent:" + event.getWindowId() + " " + AccessibilityEvent.eventTypeToString(event.getEventType()));
@@ -63,7 +64,10 @@ public class AccessibilityTestService extends AccessibilityService {
             if (mStarted) {
                 if (eventPkgName.equals(mCurPkg)) {
                     log(event.getSource(), 0);
-                    mMgr.record(event);
+                    boolean result = mMgr.record(event);
+                    if (result) {
+                    	mTextView.setText("record " + ++mSizeRecordAdded);
+                    }
                 } else {
                     loge("onAccessibilityEvent(RECORD:event pkg name not consistent curPkgName:" + mCurPkg + " event:" + eventPkgName);
                 }
@@ -90,7 +94,10 @@ public class AccessibilityTestService extends AccessibilityService {
         List<AccessibilityNodeInfo> nodeList = null;
         if (Build.VERSION.SDK_INT >= 18 && ids != null) {
                 for (String id : ids) {
-                    nodeList = source
+                	if (id == null) {
+                		continue;
+                	}
+                	nodeList = source
                             .findAccessibilityNodeInfosByViewId(id);
                     if (nodeList != null && !nodeList.isEmpty()) {
                         return nodeList.get(0);
@@ -117,6 +124,7 @@ public class AccessibilityTestService extends AccessibilityService {
     private LinearLayout mLinearLayout;
     boolean mStarted;
     boolean mPerform;
+    private TextView mTextView;
 
     private void initWindowManager() {
         mWindowManager = (WindowManager) this.getSystemService(WINDOW_SERVICE);
@@ -150,31 +158,21 @@ public class AccessibilityTestService extends AccessibilityService {
                         mCurPkg = "";
                         mMgr.recordComplete();
                         mStarted = false;
+                        mSizeRecordAdded = 0;
+                        mTextView.setText("");
                       mWindowManager.removeView(mLinearLayout);
                       mViewAdded = false;
-                        //Button bt = (Button) v;
-//                        if (mStarted) {
-//                            toast.setText("stop clicked");
-//                            bt.setText("start");
-//                            mStarted = false;
-//                            mWindowManager.removeView(mLinearLayout);
-//                            mViewAdded = false;
-//                        } else {
-//                            toast.setText("start clicked");
-//                            bt.setText("stop");
-//                            mStarted = true;
-//                        }
                         break;
                     case 1:
                         toast.setText("cancel clicked");
+                        mStarted = false;
+                        mSizeRecordAdded = 0;
+                        mTextView.setText("");
                         mWindowManager.removeView(mLinearLayout);
                         mViewAdded = false;
                         mCurPkg = "";
-                        //mMgr.cancel();
+                        mMgr.cancel();
                         break;
-                    case 2:
-                        toast.setText("perform clicked");
-                        mPerform = true;
                 }
                 toast.show();
             }
@@ -187,16 +185,12 @@ public class AccessibilityTestService extends AccessibilityService {
         cancel.setText("cancel");
         cancel.setId(1);
         cancel.setOnClickListener(listener);
-//        Button perform = new Button(this);
-//        perform.setText("perfrom");
-//        perform.setId(2);
-//        perform.setOnClickListener(listener);
+        mTextView = new TextView(this);
         mLinearLayout.addView(ok);
         mLinearLayout.addView(cancel);
-//        mLinearLayout.addView(perform);
+        mLinearLayout.addView(mTextView);
         mLinearLayout.setBackgroundColor(Color.BLUE);
         mLinearLayout.setOnTouchListener(new OnTouchListener() {
-            boolean isMove = false;
             float[] temp = new float[] {
                     0f, 0f
             };
@@ -204,12 +198,6 @@ public class AccessibilityTestService extends AccessibilityService {
             int viewX;
             int mStatusBarHeight = 0;
             float mSlop = ViewConfiguration.get(AccessibilityTestService.this).getScaledTouchSlop();
-
-            private boolean pointInView(View view, float localX, float localY) {
-                return localX >= -mSlop && localY >= -mSlop
-                        && localX < ((view.getRight() - view.getLeft()) + mSlop)
-                        && localY < ((view.getBottom() - view.getTop()) + mSlop);
-            }
 
             public void refreshWindow(int x, int y, boolean isAdjust) {
                 if (mStatusBarHeight == 0) {
@@ -251,16 +239,11 @@ public class AccessibilityTestService extends AccessibilityService {
                         temp[0] = event.getX();
                         temp[1] = event.getY();
                         // isPressed = true;
-                        isMove = false;
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        //if (isMove || !pointInView(mLinearLayout, event.getX(), event.getY())) {
-                            isMove = true;
-                            // isPressed = false;
                             viewWidth = mLinearLayout.getWidth();
                             viewX = (int) (event.getRawX() - viewWidth / 2);
                             refreshWindow(viewX, (int) (event.getRawY()), true);
-                        //}
                         break;
                     default:
                         break;
@@ -268,11 +251,10 @@ public class AccessibilityTestService extends AccessibilityService {
                 return true;
             }
         });
-        mScreenWidth = mWindowManager.getDefaultDisplay().getWidth();
         mScreenHeight = mWindowManager.getDefaultDisplay().getHeight();
     }
 
-    private int mScreenWidth, mScreenHeight;
+    private int mScreenHeight;
     //private Set<String> mPkgSet = new HashSet<String>();
     private String mCurPkg = "";
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -332,6 +314,8 @@ private class AccessTestService extends IAccessTestService.Stub {
         setServiceInfo(serviceInfo);
         mCurPkg = pkg;
         mStarted = true;
+        mPerform = false;
+        mSizeRecordAdded = 0;
         if (mViewAdded) {
             Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
             .show();

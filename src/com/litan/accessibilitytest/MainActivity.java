@@ -117,12 +117,10 @@ public class MainActivity extends ActionBarActivity {
     /**
      * A placeholder fragment containing a simple view.
      */
-    public class PlaceholderFragment extends Fragment {
+    public static class PlaceholderFragment extends Fragment {
 
         private ListView mListView;
         private boolean mStartRecord;
-        public PlaceholderFragment() {
-        }
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -177,7 +175,7 @@ public class MainActivity extends ActionBarActivity {
                     Intent intent = launchIntents.get(position);
                     //Intent intent = (Intent) adapter.getItem(position);
                     if (mStartRecord) {
-                        IAccessTestService service = (IAccessTestService) getApplicationContext().getSystemService(App.SERVICE_AC);
+                        IAccessTestService service = (IAccessTestService) getActivity().getApplicationContext().getSystemService(App.SERVICE_AC);
                         if (service != null) {
                             try {
                                 service.startRecord(newPkgList.get(position).packageName);
