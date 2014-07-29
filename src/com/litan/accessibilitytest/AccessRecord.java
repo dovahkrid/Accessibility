@@ -5,4 +5,5 @@ public interface AccessRecord {
     CharSequence getPkgName();
    String getViewResName();
    CharSequence getText();
+   int getWindowIndex();
 }

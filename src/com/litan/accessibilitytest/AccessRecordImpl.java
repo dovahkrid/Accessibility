@@ -5,6 +5,7 @@ public class AccessRecordImpl implements AccessRecord {
     String mViewResName;
     CharSequence mText;
     CharSequence mPkgName;
+    int mWindowIndex;
     @Override
     public String getViewResName() {
         return mViewResName;
@@ -23,6 +24,11 @@ public class AccessRecordImpl implements AccessRecord {
     @Override
     public int getEventType() {
         return mEventType;
+    }
+
+    @Override
+    public int getWindowIndex() {
+        return mWindowIndex;
     }
     
 }

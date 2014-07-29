@@ -22,7 +22,6 @@
     android:canRequestEnhancedWebAccessibility="true"
     android:canRequestFilterKeyEvents="true"
     android:canRetrieveWindowContent="true"
-    android:packageNames="com.netease.mobimail"
     android:description="@string/app_name"
     android:notificationTimeout="100" />
-<!-- android:android:canRequestTouchExplorationMode="true" -->
+<!-- android:android:canRequestTouchExplorationMode="true" android:packageNames="com.netease.mobimail,com.android.settings"-->
