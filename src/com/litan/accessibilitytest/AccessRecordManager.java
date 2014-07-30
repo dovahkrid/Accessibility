@@ -137,20 +137,6 @@ public interface AccessRecordManager {
                     	}
                     	return false;
                     }
-//					AccessibilityNodeInfo n = findNode(windowNode.windowNode,
-//							viewResName,
-//							viewText == null ? null : viewText.toString(),
-//							boundsInScreen, windowNode);
-//					if (n == null) {
-//						AccessibilityTestService
-//								.loge("record: can not find click node from window node:"
-//										+ windowNode.windowNode);
-//						interrupt();
-//						if (mRecordListener != null) {
-//							mRecordListener.onInterrupt();
-//						}
-//						return false;
-//					}
                     AccessRecordImpl record = new AccessRecordImpl();
                     record.mViewResName = viewResName;
                     record.mText = viewText;
@@ -171,6 +157,8 @@ public interface AccessRecordManager {
                 	}
                 	return false;
                 }
+            } else if (AccessibilityEvent.TYPE_VIEW_SCROLLED == type) {
+            	
             } else if (AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED == type) {
                 int newWindowId = event.getWindowId();
                 if (mWindowMap.containsKey(newWindowId)) {
