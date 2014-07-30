@@ -1,11 +1,14 @@
 package com.litan.accessibilitytest;
 
+import android.graphics.Rect;
+
 public class AccessRecordImpl implements AccessRecord {
     int mEventType;
     String mViewResName;
     CharSequence mText;
     CharSequence mPkgName;
     int mWindowIndex;
+    Rect mBoundsInScreen;
     @Override
     public String getViewResName() {
         return mViewResName;
@@ -29,6 +32,11 @@ public class AccessRecordImpl implements AccessRecord {
     @Override
     public int getWindowIndex() {
         return mWindowIndex;
+    }
+
+    @Override
+    public Rect getBoundsInScreen() {
+        return mBoundsInScreen;
     }
     
 }

@@ -44,45 +44,55 @@ public class AccessibilityTestService extends AccessibilityService {
         if (node == null) {
             return;
         }
-        logv(level + " node:" + node.getChildCount() + " " + node.getViewIdResourceName() + " " + node.getText());
+        logv(level + " node:" + node.getChildCount() + " " + node.getViewIdResourceName() + " "
+                + node.getText());
         for (int i = 0; i < node.getChildCount(); i++) {
             AccessibilityNodeInfo n = node.getChild(i);
             log(n, level + 1);
         }
     }
+
     private int mSizeRecordAdded;
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        logi("onAccessibilityEvent:" + event.getWindowId() + " " + AccessibilityEvent.eventTypeToString(event.getEventType()));
+        logi("onAccessibilityEvent:" + event.getWindowId() + " "
+                + AccessibilityEvent.eventTypeToString(event.getEventType()));
         if (TextUtils.isEmpty(mCurPkg)) {
             logv("onAccessibilityEvent:cant not find curPkg");
             return;
         }
         int type = event.getEventType();
-        if (AccessibilityEvent.TYPE_VIEW_CLICKED == type || AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED == type || AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED == type) {
+        if (AccessibilityEvent.TYPE_VIEW_CLICKED == type
+                || AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED == type
+                || AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED == type
+                || AccessibilityEvent.TYPE_VIEW_SCROLLED == type) {
             String eventPkgName = event.getPackageName().toString();
             if (mStarted) {
                 if (eventPkgName.equals(mCurPkg)) {
                     log(event.getSource(), 0);
                     boolean result = mMgr.record(event);
                     if (result) {
-                    	mTextView.setText("record " + ++mSizeRecordAdded);
+                        mTextView.setText("record " + ++mSizeRecordAdded);
                     }
                 } else {
-                    loge("onAccessibilityEvent(RECORD:event pkg name not consistent curPkgName:" + mCurPkg + " event:" + eventPkgName);
+                    loge("onAccessibilityEvent(RECORD:event pkg name not consistent curPkgName:"
+                            + mCurPkg + " event:" + eventPkgName);
                 }
-            }  else  if (mPerform) {
+            } else if (mPerform) {
                 if (eventPkgName.equals(mCurPkg)) {
                     mMgr.perfrom(event);
-//                    if (!mMgr.hasRecords()) {
-//                        mPerform = false;
-//                    }
+                    // if (!mMgr.hasRecords()) {
+                    // mPerform = false;
+                    // }
                 } else {
-                    loge("onAccessibilityEvent(PERFORM):event pkg name not consistent curPkgName:" + mCurPkg + " event:" + eventPkgName);
+                    loge("onAccessibilityEvent(PERFORM):event pkg name not consistent curPkgName:"
+                            + mCurPkg + " event:" + eventPkgName);
                 }
             }
         } else {
-            logw("onAccessibilityEvent:unsupported type:" + AccessibilityEvent.eventTypeToString(type));
+            logw("onAccessibilityEvent:unsupported type:"
+                    + AccessibilityEvent.eventTypeToString(type));
         }
     }
 
@@ -93,16 +103,16 @@ public class AccessibilityTestService extends AccessibilityService {
         }
         List<AccessibilityNodeInfo> nodeList = null;
         if (Build.VERSION.SDK_INT >= 18 && ids != null) {
-                for (String id : ids) {
-                	if (id == null) {
-                		continue;
-                	}
-                	nodeList = source
-                            .findAccessibilityNodeInfosByViewId(id);
-                    if (nodeList != null && !nodeList.isEmpty()) {
-                        return nodeList.get(0);
-                    }
+            for (String id : ids) {
+                if (id == null) {
+                    continue;
                 }
+                nodeList = source
+                        .findAccessibilityNodeInfosByViewId(id);
+                if (nodeList != null && !nodeList.isEmpty()) {
+                    return nodeList.get(0);
+                }
+            }
         }
         if (Build.VERSION.SDK_INT >= 14 && text != null) {
             nodeList = source.findAccessibilityNodeInfosByText(text);
@@ -145,7 +155,7 @@ public class AccessibilityTestService extends AccessibilityService {
                 logv("LinearLayout onInterceptTouchEvent false");
                 return super.onInterceptTouchEvent(event);
             }
-            
+
         };
         mLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
         OnClickListener listener = new OnClickListener() {
@@ -160,8 +170,8 @@ public class AccessibilityTestService extends AccessibilityService {
                         mStarted = false;
                         mSizeRecordAdded = 0;
                         mTextView.setText("");
-                      mWindowManager.removeView(mLinearLayout);
-                      mViewAdded = false;
+                        mWindowManager.removeView(mLinearLayout);
+                        mViewAdded = false;
                         break;
                     case 1:
                         toast.setText("cancel clicked");
@@ -241,9 +251,9 @@ public class AccessibilityTestService extends AccessibilityService {
                         // isPressed = true;
                         break;
                     case MotionEvent.ACTION_MOVE:
-                            viewWidth = mLinearLayout.getWidth();
-                            viewX = (int) (event.getRawX() - viewWidth / 2);
-                            refreshWindow(viewX, (int) (event.getRawY()), true);
+                        viewWidth = mLinearLayout.getWidth();
+                        viewX = (int) (event.getRawX() - viewWidth / 2);
+                        refreshWindow(viewX, (int) (event.getRawY()), true);
                         break;
                     default:
                         break;
@@ -255,7 +265,7 @@ public class AccessibilityTestService extends AccessibilityService {
     }
 
     private int mScreenHeight;
-    //private Set<String> mPkgSet = new HashSet<String>();
+    // private Set<String> mPkgSet = new HashSet<String>();
     private String mCurPkg = "";
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
 
@@ -263,8 +273,9 @@ public class AccessibilityTestService extends AccessibilityService {
         public void onReceive(Context context, Intent intent) {
             if (ACTION_SHOW_WINDOW.equals(intent.getAction())) {
                 if (mViewAdded) {
-                    Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
-                    .show();
+                    Toast.makeText(AccessibilityTestService.this, "already showed",
+                            Toast.LENGTH_SHORT)
+                            .show();
                 } else {
                     mWindowManager.addView(mLinearLayout, mLayoutParams);
                     mViewAdded = true;
@@ -272,13 +283,16 @@ public class AccessibilityTestService extends AccessibilityService {
             } else if (ACTION_START_RECORD.equals(intent.getAction())) {
                 String pkg = intent.getStringExtra("pkg");
                 AccessibilityServiceInfo serviceInfo = getServiceInfo();
-                serviceInfo.packageNames = new String[]{pkg};
+                serviceInfo.packageNames = new String[] {
+                    pkg
+                };
                 setServiceInfo(serviceInfo);
                 mCurPkg = pkg;
                 mStarted = true;
                 if (mViewAdded) {
-                    Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
-                    .show();
+                    Toast.makeText(AccessibilityTestService.this, "already showed",
+                            Toast.LENGTH_SHORT)
+                            .show();
                 } else {
                     mWindowManager.addView(mLinearLayout, mLayoutParams);
                     mViewAdded = true;
@@ -289,6 +303,7 @@ public class AccessibilityTestService extends AccessibilityService {
 
     public static final String ACTION_SHOW_WINDOW = "action.show.window";
     public static final String ACTION_START_RECORD = "action.start.record";
+
     @Override
     public void onCreate() {
         initWindowManager();
@@ -305,63 +320,72 @@ public class AccessibilityTestService extends AccessibilityService {
         LocalBroadcastManager mgr = LocalBroadcastManager.getInstance(this);
         mgr.unregisterReceiver(mReceiver);
     }
-private class AccessTestService extends IAccessTestService.Stub {
 
-    @Override
-    public void startRecord(String pkg) throws RemoteException {
-        AccessibilityServiceInfo serviceInfo = getServiceInfo();
-        serviceInfo.packageNames = new String[]{pkg};
-        setServiceInfo(serviceInfo);
-        mCurPkg = pkg;
-        mStarted = true;
-        mPerform = false;
-        mSizeRecordAdded = 0;
-        if (mViewAdded) {
-            Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
-            .show();
-        } else {
-            mWindowManager.addView(mLinearLayout, mLayoutParams);
-            mViewAdded = true;
-        }
-    }
+    private class AccessTestService extends IAccessTestService.Stub {
 
-    @Override
-    public List<String> getRecordedPkg() throws RemoteException {
-        return mMgr.getRecored();
-    }
-
-    @Override
-    public void startPerform(String pkg) throws RemoteException {
-        if (mStarted) {
-            Toast.makeText(AccessibilityTestService.this, "already in record time", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (mPerform) {
-            Toast.makeText(AccessibilityTestService.this, "already in perform time", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        mPerform = true;
-        mCurPkg = pkg;
-        boolean success = mMgr.preparePerform(pkg, new PerfomListener() {
-            
-            @Override
-            public void onComplete() {
-               Toast.makeText(AccessibilityTestService.this, "Perform complete", Toast.LENGTH_SHORT).show();
-               mPerform = false;
-               mCurPkg = "";
+        @Override
+        public void startRecord(String pkg) throws RemoteException {
+            AccessibilityServiceInfo serviceInfo = getServiceInfo();
+            serviceInfo.packageNames = new String[] {
+                pkg
+            };
+            setServiceInfo(serviceInfo);
+            mCurPkg = pkg;
+            mStarted = true;
+            mPerform = false;
+            mSizeRecordAdded = 0;
+            if (mViewAdded) {
+                Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
+                        .show();
+            } else {
+                mWindowManager.addView(mLinearLayout, mLayoutParams);
+                mViewAdded = true;
             }
-        });
-        Toast.makeText(AccessibilityTestService.this, "preparePerform " + (success ? "success" : "failed"), Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public List<String> getRecordedPkg() throws RemoteException {
+            return mMgr.getRecored();
+        }
+
+        @Override
+        public void startPerform(String pkg) throws RemoteException {
+            if (mStarted) {
+                Toast.makeText(AccessibilityTestService.this, "already in record time",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (mPerform) {
+                Toast.makeText(AccessibilityTestService.this, "already in perform time",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            mPerform = true;
+            mCurPkg = pkg;
+            boolean success = mMgr.preparePerform(pkg, new PerfomListener() {
+
+                @Override
+                public void onComplete() {
+                    Toast.makeText(AccessibilityTestService.this, "Perform complete",
+                            Toast.LENGTH_SHORT).show();
+                    mPerform = false;
+                    mCurPkg = "";
+                }
+            });
+            Toast.makeText(AccessibilityTestService.this,
+                    "preparePerform " + (success ? "success" : "failed"), Toast.LENGTH_SHORT)
+                    .show();
+        }
+
     }
-    
-}
+
     @Override
     public void onServiceConnected() {
         logi("onServiceConnected");
         LocalBroadcastManager mgr = LocalBroadcastManager.getInstance(this);
         Intent intent = new Intent("action.binder");
         Bundle bundle = new Bundle();
-        bundle.putBinder("binder",new AccessTestService());
+        bundle.putBinder("binder", new AccessTestService());
         intent.putExtra("bundle", bundle);
         mgr.sendBroadcast(intent);
     }
@@ -370,14 +394,14 @@ private class AccessTestService extends IAccessTestService.Stub {
         Log.d(TAG, msg);
     }
 
-     static void logw(String msg) {
+    static void logw(String msg) {
         Log.w(TAG, msg);
     }
 
     static void loge(String msg) {
         Log.e(TAG, msg);
     }
-    
+
     static void logi(String msg) {
         Log.i(TAG, msg);
     }
