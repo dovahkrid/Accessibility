@@ -34,6 +34,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.litan.accessibilitytest.AccessRecordManager.PerfomListener;
+import com.litan.accessibilitytest.AccessRecordManager.RecordListener;
 
 public class AccessibilityTestService extends AccessibilityService {
     private static final String TAG = "litan";
@@ -82,9 +83,6 @@ public class AccessibilityTestService extends AccessibilityService {
             } else if (mPerform) {
                 if (eventPkgName.equals(mCurPkg)) {
                     mMgr.perfrom(event);
-                    // if (!mMgr.hasRecords()) {
-                    // mPerform = false;
-                    // }
                 } else {
                     loge("onAccessibilityEvent(PERFORM):event pkg name not consistent curPkgName:"
                             + mCurPkg + " event:" + eventPkgName);
@@ -265,82 +263,50 @@ public class AccessibilityTestService extends AccessibilityService {
     }
 
     private int mScreenHeight;
-    // private Set<String> mPkgSet = new HashSet<String>();
     private String mCurPkg = "";
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (ACTION_SHOW_WINDOW.equals(intent.getAction())) {
-                if (mViewAdded) {
-                    Toast.makeText(AccessibilityTestService.this, "already showed",
-                            Toast.LENGTH_SHORT)
-                            .show();
-                } else {
-                    mWindowManager.addView(mLinearLayout, mLayoutParams);
-                    mViewAdded = true;
-                }
-            } else if (ACTION_START_RECORD.equals(intent.getAction())) {
-                String pkg = intent.getStringExtra("pkg");
-                AccessibilityServiceInfo serviceInfo = getServiceInfo();
-                serviceInfo.packageNames = new String[] {
-                    pkg
-                };
-                setServiceInfo(serviceInfo);
-                mCurPkg = pkg;
-                mStarted = true;
-                if (mViewAdded) {
-                    Toast.makeText(AccessibilityTestService.this, "already showed",
-                            Toast.LENGTH_SHORT)
-                            .show();
-                } else {
-                    mWindowManager.addView(mLinearLayout, mLayoutParams);
-                    mViewAdded = true;
-                }
-            }
-        }
-    };
-
-    public static final String ACTION_SHOW_WINDOW = "action.show.window";
-    public static final String ACTION_START_RECORD = "action.start.record";
 
     @Override
     public void onCreate() {
         initWindowManager();
-        LocalBroadcastManager mgr = LocalBroadcastManager.getInstance(this);
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_SHOW_WINDOW);
-        filter.addAction(ACTION_START_RECORD);
-        mgr.registerReceiver(mReceiver, filter);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        LocalBroadcastManager mgr = LocalBroadcastManager.getInstance(this);
-        mgr.unregisterReceiver(mReceiver);
     }
 
     private class AccessTestService extends IAccessTestService.Stub {
 
         @Override
-        public void startRecord(String pkg) throws RemoteException {
+        public void startRecord(final String pkg) throws RemoteException {
             AccessibilityServiceInfo serviceInfo = getServiceInfo();
             serviceInfo.packageNames = new String[] {
                 pkg
             };
             setServiceInfo(serviceInfo);
-            mCurPkg = pkg;
-            mStarted = true;
-            mPerform = false;
-            mSizeRecordAdded = 0;
-            if (mViewAdded) {
-                Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
-                        .show();
-            } else {
-                mWindowManager.addView(mLinearLayout, mLayoutParams);
-                mViewAdded = true;
-            }
+            if (mMgr.prepareRecord(pkg, new RecordListener() {
+
+				@Override
+				public void onInterrupt() {
+					mCurPkg = "";
+					mStarted = false;
+					mSizeRecordAdded = 0;
+					mTextView.setText("");
+					mWindowManager.removeView(mLinearLayout);
+					Toast.makeText(AccessibilityTestService.this,
+							"record onInterrupt for pkg:" + pkg, Toast.LENGTH_SHORT).show();
+				}
+			})) {
+            	mCurPkg = pkg;
+            	mStarted = true;
+                mPerform = false;
+                mSizeRecordAdded = 0;
+                if (mViewAdded) {
+                    Toast.makeText(AccessibilityTestService.this, "already showed", Toast.LENGTH_SHORT)
+                            .show();
+                } else {
+                    mWindowManager.addView(mLinearLayout, mLayoutParams);
+                    mViewAdded = true;
+                }
+			} else {
+				Toast.makeText(AccessibilityTestService.this,
+						"can not start record", Toast.LENGTH_SHORT).show();
+			}
         }
 
         @Override
