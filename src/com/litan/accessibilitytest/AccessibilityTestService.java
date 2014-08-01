@@ -39,7 +39,7 @@ import com.litan.accessibilitytest.AccessRecordManager.RecordListener;
 public class AccessibilityTestService extends AccessibilityService {
     private static final String TAG = "litan";
     private boolean mViewAdded;
-    private AccessRecordManager mMgr = new AccessRecordManager.AccessRecordManagerImpl();
+    private AccessRecordManager mMgr;
 
     private void log(AccessibilityNodeInfo node, int level) {
         if (node == null) {
@@ -110,14 +110,23 @@ public class AccessibilityTestService extends AccessibilityService {
                 nodeList = source
                         .findAccessibilityNodeInfosByViewId(id);
                 if (nodeList != null && !nodeList.isEmpty()) {
-                    return nodeList.get(0);
+                	for (AccessibilityNodeInfo node : nodeList) {
+                		if (id.equals(node.getViewIdResourceName())) {
+                			return node;
+                		}
+                	}
+//                    return nodeList.get(0);
                 }
             }
         }
         if (Build.VERSION.SDK_INT >= 14 && text != null) {
             nodeList = source.findAccessibilityNodeInfosByText(text);
             if (nodeList != null && !nodeList.isEmpty()) {
-                return nodeList.get(0);
+            	for (AccessibilityNodeInfo node : nodeList) {
+            		if (text.equals(node.getText())) {
+            			return node;
+            		}
+            	}
             }
         }
         logw("Can not found node:" + text);
@@ -269,6 +278,7 @@ public class AccessibilityTestService extends AccessibilityService {
 
     @Override
     public void onCreate() {
+    	mMgr = new AccessRecordManager.AccessRecordManagerImpl(this);
         initWindowManager();
     }
 
@@ -324,9 +334,10 @@ public class AccessibilityTestService extends AccessibilityService {
                 return;
             }
             if (mPerform) {
-                Toast.makeText(AccessibilityTestService.this, "already in perform time",
-                        Toast.LENGTH_SHORT).show();
-                return;
+//                Toast.makeText(AccessibilityTestService.this, "already in perform time",
+//                        Toast.LENGTH_SHORT).show();
+            	mMgr.interrupt();
+//                return;
             }
             mPerform = true;
             mCurPkg = pkg;
@@ -340,9 +351,9 @@ public class AccessibilityTestService extends AccessibilityService {
                     mCurPkg = "";
                 }
             });
-            Toast.makeText(AccessibilityTestService.this,
-                    "preparePerform " + (success ? "success" : "failed"), Toast.LENGTH_SHORT)
-                    .show();
+//            Toast.makeText(AccessibilityTestService.this,
+//                    "preparePerform " + (success ? "success" : "failed"), Toast.LENGTH_SHORT)
+//                    .show();
         }
 
     }

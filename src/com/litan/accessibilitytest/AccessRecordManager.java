@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import android.content.Context;
 import android.graphics.Rect;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -45,7 +46,8 @@ public interface AccessRecordManager {
 
     // boolean readyForPerform(AccessibilityEvent event);
     public class AccessRecordManagerImpl implements AccessRecordManager {
-        private Map<String, LinkedList<AccessRecord>> mRecordMap = new HashMap<String, LinkedList<AccessRecord>>();
+    	private final Context mContext;
+        private final Map<String, LinkedList<AccessRecord>> mRecordMap = new HashMap<String, LinkedList<AccessRecord>>();
         private String mCurPkg;
         private RecordListener mRecordListener;
         private LinkedList<AccessRecord> mCurRecordList = new LinkedList<AccessRecord>();
@@ -58,6 +60,10 @@ public interface AccessRecordManager {
         	int index;
         	AccessibilityNodeInfo windowNode;
         	List<AccessibilityNodeInfo> contentNodes = new ArrayList<AccessibilityNodeInfo>();
+        }
+        public AccessRecordManagerImpl(Context ctx) {
+        	mContext = ctx;
+        	AccessRecordXmlWriter.init(mRecordMap);
         }
         public boolean prepareRecord(String pkg, RecordListener listener) {
         	mCurPkg = pkg;
@@ -80,6 +86,7 @@ public interface AccessRecordManager {
         public void recordComplete() {
             if (mCurPkg != null && !mCurRecordList.isEmpty()) {
                 mRecordMap.put(mCurPkg, (LinkedList<AccessRecord>) mCurRecordList.clone());
+                AccessRecordXmlWriter.build(mCurPkg, mCurRecordList);
                 interrupt();
             } else {
                 AccessibilityTestService.loge("recordComplete: failed with curPkg:" + mCurPkg
@@ -307,7 +314,7 @@ public interface AccessRecordManager {
                                         mNodeList.add(n);
                                     } else {
                                         AccessibilityTestService
-                                                .loge("perform: cant not find node res:" + rN
+                                                .logd("perform: cant not find node res:" + rN
                                                         + " text:" + rT + " boundsInScreen:"
                                                         + r.getBoundsInScreen());
                                     }
@@ -351,7 +358,7 @@ public interface AccessRecordManager {
                             mNodeList.add(n);
                         } else {
                             AccessibilityTestService
-                                    .loge("perform: cant not find node res:" + rN
+                                    .logd("perform: cant not find node res:" + rN
                                             + " text:" + rT + " boundsInScreen:"
                                             + r.getBoundsInScreen());
                         }
