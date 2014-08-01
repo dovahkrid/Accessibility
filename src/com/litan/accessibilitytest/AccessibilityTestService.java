@@ -45,8 +45,10 @@ public class AccessibilityTestService extends AccessibilityService {
         if (node == null) {
             return;
         }
+        Rect rect = new Rect();
+        node.getBoundsInScreen(rect);
         logv(level + " node:" + node.getChildCount() + " " + node.getViewIdResourceName() + " "
-                + node.getText());
+                + node.getText() + " bounds:" + rect);
         for (int i = 0; i < node.getChildCount(); i++) {
             AccessibilityNodeInfo n = node.getChild(i);
             log(n, level + 1);
@@ -69,9 +71,9 @@ public class AccessibilityTestService extends AccessibilityService {
                 || AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED == type
                 || AccessibilityEvent.TYPE_VIEW_SCROLLED == type) {
             String eventPkgName = event.getPackageName().toString();
+            log(event.getSource(), 0);
             if (mStarted) {
                 if (eventPkgName.equals(mCurPkg)) {
-                    log(event.getSource(), 0);
                     boolean result = mMgr.record(event);
                     if (result) {
                         mTextView.setText("record " + ++mSizeRecordAdded);
