@@ -77,6 +77,10 @@ public interface AccessRecordManager {
             mWindowId = -1;
             mWindowMap.clear();
             mWindowIndex = -1;
+            if (mRecordListener != null) {
+            	mRecordListener.onInterrupt();
+            	mRecordListener = null;
+            }
         }
 
         public boolean isRecording() {
@@ -109,7 +113,7 @@ public interface AccessRecordManager {
         @Override
         public void cancel() {
             interrupt();
-            mRecordMap.clear();
+            //mRecordMap.clear();
         }
 
         // 根据视图点击，以及引起的窗口内容变化并再遍历下一步需要点击的内容来创建记录
@@ -414,6 +418,9 @@ public interface AccessRecordManager {
 
         @Override
         public boolean preparePerform(String pkg, PerfomListener listener) {
+        	if (mRecordMap.isEmpty()) {
+        		AccessRecordXmlWriter.init(mRecordMap);
+        	}
             LinkedList<AccessRecord> list = mRecordMap.get(pkg);
             if (list == null) {
                 return false;
