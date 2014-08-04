@@ -2,6 +2,7 @@
 <resources>
 
     <string name="app_name">AccessibilityTest</string>
+    <string name="uc">uc</string>
     <string name="younote">YouNote</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_start_record">start record</string>
