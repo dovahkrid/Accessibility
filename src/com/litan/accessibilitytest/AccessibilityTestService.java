@@ -61,6 +61,9 @@ public class AccessibilityTestService extends AccessibilityService {
     public void onAccessibilityEvent(AccessibilityEvent event) {
         logi("onAccessibilityEvent:" + event.getWindowId() + " "
                 + AccessibilityEvent.eventTypeToString(event.getEventType()));
+        if (true) {
+        	log(event.getSource(), 0);
+        }
         // password manager
         if (!mStarted && !mPerform) {
         	if ("com.tencent.mobileqq".equals(event.getPackageName())) {
@@ -185,12 +188,15 @@ public class AccessibilityTestService extends AccessibilityService {
                 nodeList = source
                         .findAccessibilityNodeInfosByViewId(id);
                 if (nodeList != null && !nodeList.isEmpty()) {
-                	for (AccessibilityNodeInfo node : nodeList) {
-                		if (id.equals(node.getViewIdResourceName())) {
-                			return node;
+                	if (text != null) {
+                		for (AccessibilityNodeInfo node : nodeList) {
+                			if (text.equals(node.getText().toString())) {
+                				return node;
+                			}
                 		}
+                	} else {
+                		return nodeList.get(0);
                 	}
-//                    return nodeList.get(0);
                 }
             }
         }
@@ -198,7 +204,7 @@ public class AccessibilityTestService extends AccessibilityService {
             nodeList = source.findAccessibilityNodeInfosByText(text);
             if (nodeList != null && !nodeList.isEmpty()) {
             	for (AccessibilityNodeInfo node : nodeList) {
-            		if (text.equals(node.getText())) {
+            		if (text.equals(node.getText().toString())) {
             			return node;
             		}
             	}
@@ -373,6 +379,7 @@ public class AccessibilityTestService extends AccessibilityService {
 					mStarted = false;
 					mSizeRecordAdded = 0;
 					mTextView.setText("");
+					mViewAdded = false;
 					mWindowManager.removeView(mLinearLayout);
 					Toast.makeText(AccessibilityTestService.this,
 							"record onInterrupt for pkg:" + pkg, Toast.LENGTH_SHORT).show();
@@ -441,6 +448,11 @@ public class AccessibilityTestService extends AccessibilityService {
         bundle.putBinder("binder", new AccessTestService());
         intent.putExtra("bundle", bundle);
         mgr.sendBroadcast(intent);
+        List<String> pkgs = mMgr.getRecored();
+        if (!pkgs.isEmpty()) {
+        	AccessibilityServiceInfo info = getServiceInfo();
+        	info.packageNames = pkgs.toArray(new String[]{});
+        }
     }
 
     static void logd(String msg) {

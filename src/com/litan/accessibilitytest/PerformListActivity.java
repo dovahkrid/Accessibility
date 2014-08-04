@@ -35,9 +35,13 @@ public class PerformListActivity extends Activity {
             final List<PackageInfo> pkgInfoList = new ArrayList<PackageInfo>();
             final PackageManager pm = getPackageManager();
             for (String p : pkgList) {
-                PackageInfo pkgInfo = pm.getPackageInfo(p, 0);
-                if (pkgInfo != null) {
-                    pkgInfoList.add(pkgInfo);
+            	try {
+            		PackageInfo pkgInfo = pm.getPackageInfo(p, 0);
+            		if (pkgInfo != null) {
+            			pkgInfoList.add(pkgInfo);
+            		}
+            	} catch (NameNotFoundException e) {
+                    e.printStackTrace();
                 }
             }
             AppListAdapter adapter = new AppListAdapter(this, pm, pkgInfoList);
@@ -61,9 +65,6 @@ public class PerformListActivity extends Activity {
                 }
             });
         } catch (RemoteException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (NameNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

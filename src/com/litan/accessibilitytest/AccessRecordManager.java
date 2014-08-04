@@ -72,17 +72,20 @@ public interface AccessRecordManager {
         }
         public void interrupt() {
         	AccessibilityTestService.logi("interrupt for pkg:" + mCurPkg);
-            mCurPkg = null;
-            mCurRecordList.clear();
-            mWindowId = -1;
-            mWindowMap.clear();
-            mWindowIndex = -1;
+            resetForRecord();
             if (mRecordListener != null) {
             	mRecordListener.onInterrupt();
             	mRecordListener = null;
             }
         }
 
+        private void resetForRecord() {
+        	mCurPkg = null;
+            mCurRecordList.clear();
+            mWindowId = -1;
+            mWindowMap.clear();
+            mWindowIndex = -1;
+        }
         public boolean isRecording() {
             return false;
         }
@@ -91,7 +94,7 @@ public interface AccessRecordManager {
             if (mCurPkg != null && !mCurRecordList.isEmpty()) {
                 mRecordMap.put(mCurPkg, (LinkedList<AccessRecord>) mCurRecordList.clone());
                 AccessRecordXmlWriter.build(mCurPkg, mCurRecordList);
-                interrupt();
+                resetForRecord();
             } else {
                 AccessibilityTestService.loge("recordComplete: failed with curPkg:" + mCurPkg
                         + " recordList.size:" + mCurRecordList.size());
@@ -116,6 +119,19 @@ public interface AccessRecordManager {
             //mRecordMap.clear();
         }
 
+        private AccessibilityNodeInfo findAvailiableNode(AccessibilityNodeInfo node) {
+        	AccessibilityNodeInfo result = null;
+        	for (int i = 0; i < node.getChildCount(); i++) {
+        		result = node.getChild(i);
+        		if (result != null) {
+        			if (result.getText() != null || result.getViewIdResourceName() != null) {
+        				return result;
+        			}
+        		}
+        	}
+        	// TODO: recursion
+        	return null;
+        }
         // 根据视图点击，以及引起的窗口内容变化并再遍历下一步需要点击的内容来创建记录
         @Override
         public boolean record(AccessibilityEvent event) {
@@ -149,6 +165,14 @@ public interface AccessRecordManager {
                     	return false;
                     }
                     AccessRecordImpl record = new AccessRecordImpl();
+                    if (viewResName == null && viewText == null) {
+                    	AccessibilityNodeInfo n = findAvailiableNode(nodeInfo);
+                    	if (n != null) {
+                    		viewResName = n.getViewIdResourceName();
+                    		viewText = n.getText();
+                    		record.mChildDepth = 1;
+                    	}
+                    }
                     record.mViewResName = viewResName;
                     record.mText = viewText;
                     record.mPkgName = nodeInfo.getPackageName();
@@ -156,7 +180,7 @@ public interface AccessRecordManager {
                     record.mWindowIndex = windowNode.index;
                     record.mBoundsInScreen = boundsInScreen;
                     mCurRecordList.add(record);
-                    AccessibilityTestService.logi("add Record:" + viewResName + " windowIndex:"
+                    AccessibilityTestService.logi("add Record: res" + viewResName + " text:" + viewText + " windowIndex:"
                             + record.mWindowIndex);
                     return true;
                 } else {
@@ -294,6 +318,10 @@ public interface AccessRecordManager {
                         String resName = record.getViewResName();
                         CharSequence text = record.getText();
                         AccessibilityNodeInfo node = findNode(source, resName, text != null ? text.toString() : null, record.getBoundsInScreen(), null);
+                        if (node != null && record.getChildDepth() == 1) {
+                        	// TODO: support 1 only now.
+                        	node = node.getParent();
+                        }
                         if (node != null) {
                             mCurPerformList.remove();
                             int windowIndex = record.getWindowIndex();

@@ -3,6 +3,7 @@ package com.litan.accessibilitytest;
 import android.graphics.Rect;
 
 public class AccessRecordImpl implements AccessRecord {
+	int mChildDepth;
     int mEventType;
     String mViewResName;
     CharSequence mText;
@@ -38,5 +39,10 @@ public class AccessRecordImpl implements AccessRecord {
     public Rect getBoundsInScreen() {
         return mBoundsInScreen;
     }
+
+	@Override
+	public int getChildDepth() {
+		return mChildDepth;
+	}
     
 }
