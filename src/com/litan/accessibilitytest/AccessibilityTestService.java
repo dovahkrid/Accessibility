@@ -31,7 +31,7 @@ public class AccessibilityTestService extends AccessibilityService {
         if (source == null) {
             return;
         } else {
-            //log(source, 0);
+            log(source, 0);
         }
 //        if (true)
 //        return;
@@ -70,17 +70,19 @@ public class AccessibilityTestService extends AccessibilityService {
         }
         if ("com.android.settings.applications.InstalledAppDetailsTop".equals(event.getClassName())) {
             logd("enter InstalledAppDetailsTop");
-            AccessibilityNodeInfo node = findNode(source, new String[] {
-                    "com.android.settings:id/left_button",
-                    "com.android.settings:id/force_stop_button"
-            }, "强行停止");
+//            AccessibilityNodeInfo node = findNode(source, new String[] {
+//                    "com.android.settings:id/left_button",
+//                    "com.android.settings:id/force_stop_button"
+                    AccessibilityNodeInfo node = findNode(source, new String[] {
+                            "com.android.settings:id/notification_switch"
+            }, "显示通知");
             if (node != null) {
                 if (mIsOkClicked) {
                     mIsOkClicked = false;
                     performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
                     return;
                 }
-                if (node.isEnabled()) {
+                if (node.isEnabled() && node.isChecked()) {
                     node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                     logi("perform 强行停止");
                     mIsStopClicked = true;
