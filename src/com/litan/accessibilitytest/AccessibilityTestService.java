@@ -5,10 +5,7 @@ import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
@@ -251,7 +248,6 @@ public class AccessibilityTestService extends AccessibilityService {
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                logv("LinearLayout onTouch " + event);
                 int eventaction = event.getAction();
                 switch (eventaction) {
                     case MotionEvent.ACTION_DOWN:
