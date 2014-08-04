@@ -47,7 +47,7 @@ public class AccessibilityTestService extends AccessibilityService {
         Rect rect = new Rect();
         node.getBoundsInScreen(rect);
         logv(level + " node:" + node.getChildCount() + " " + node.getViewIdResourceName() + " "
-                + node.getText() + " bounds:" + rect);
+                + node.getText() + " bounds:" + rect + " clickable:" + node.isClickable());
         for (int i = 0; i < node.getChildCount(); i++) {
             AccessibilityNodeInfo n = node.getChild(i);
             log(n, level + 1);
@@ -379,8 +379,10 @@ public class AccessibilityTestService extends AccessibilityService {
 					mStarted = false;
 					mSizeRecordAdded = 0;
 					mTextView.setText("");
-					mViewAdded = false;
-					mWindowManager.removeView(mLinearLayout);
+					if (mViewAdded) {
+						mWindowManager.removeView(mLinearLayout);
+						mViewAdded = false;
+					}
 					Toast.makeText(AccessibilityTestService.this,
 							"record onInterrupt for pkg:" + pkg, Toast.LENGTH_SHORT).show();
 				}
@@ -452,6 +454,7 @@ public class AccessibilityTestService extends AccessibilityService {
         if (!pkgs.isEmpty()) {
         	AccessibilityServiceInfo info = getServiceInfo();
         	info.packageNames = pkgs.toArray(new String[]{});
+        	setServiceInfo(info);
         }
     }
 

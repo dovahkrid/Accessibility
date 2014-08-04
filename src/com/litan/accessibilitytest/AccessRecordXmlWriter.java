@@ -27,6 +27,7 @@ public class AccessRecordXmlWriter {
 	public static final String ATTR_RES = "res";
 	public static final String ATTR_TEXT = "txt";
 	public static final String ATTR_W_INDEX = "w-index";
+	public static final String ATTR_CHILD_DEPTH = "depth";
 	public static final String ATTR_RECT = "rect";
 
 	public static void init(Map<String, LinkedList<AccessRecord>> map) {
@@ -61,6 +62,8 @@ public class AccessRecordXmlWriter {
 							a.mText = parser.getAttributeValue(null, ATTR_TEXT);
 							a.mViewResName = parser.getAttributeValue(null,
 									ATTR_RES);
+							String childD = parser.getAttributeValue(null, ATTR_CHILD_DEPTH);
+							a.mChildDepth = childD == null ? 0 : Integer.valueOf(childD);
 							a.mWindowIndex = Integer.valueOf(parser
 									.getAttributeValue(null, ATTR_W_INDEX));
 							String rect = parser.getAttributeValue(null,
@@ -140,6 +143,7 @@ public class AccessRecordXmlWriter {
 				}
 				serializer
 						.attribute(null, ATTR_W_INDEX, String.valueOf(wIndex));
+				serializer.attribute(null, ATTR_CHILD_DEPTH, String.valueOf(record.getChildDepth()));
 				StringBuilder sb = new StringBuilder();
 				sb.append(rect.left).append(",").append(rect.top).append(",")
 						.append(rect.right).append(",").append(rect.bottom);

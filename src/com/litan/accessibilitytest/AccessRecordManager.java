@@ -352,9 +352,9 @@ public interface AccessRecordManager {
                                     }
                                 }
                             }
-                            AccessibilityTestService.logi("perform click record:"
-                                    + record.getViewResName() + " windowIndex:" + windowIndex);
                             boolean result = node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                            AccessibilityTestService.logi("perform click record:" + result + " res:"
+                            		+ record.getViewResName() + " windowIndex:" + windowIndex + " node:" + node);
                             if (mCurPerformList.isEmpty()) {
                                 if (mListener != null) {
                                     mListener.onComplete();
@@ -420,6 +420,8 @@ public interface AccessRecordManager {
                     mCurPerformList.remove();
                     mNodeList.remove(node);
                     boolean result = node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                    AccessibilityTestService.logi("perform click record:" + result + " res:"
+                    		+ record.getViewResName() + " node:" + node);
                     if (mCurPerformList.isEmpty()) {
                         if (mListener != null) {
                             mListener.onComplete();
