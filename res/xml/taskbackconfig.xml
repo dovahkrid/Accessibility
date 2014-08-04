@@ -23,6 +23,6 @@
     android:canRequestFilterKeyEvents="true"
     android:canRetrieveWindowContent="true"
     android:description="@string/app_name"
-     android:packageNames="com.android.settings"
+     android:packageNames="com.android.settings,com.tencent.mobileqq"
     android:notificationTimeout="100" />
 <!-- android:android:canRequestTouchExplorationMode="true" android:packageNames="com.netease.mobimail,com.android.settings" |flagRequestEnhancedWebAccessibility|flagRequestFilterKeyEvents|flagRequestTouchExplorationMode-->

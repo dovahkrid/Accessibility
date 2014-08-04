@@ -5,6 +5,8 @@ import java.util.List;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
@@ -53,13 +55,89 @@ public class AccessibilityTestService extends AccessibilityService {
     }
 
     private int mSizeRecordAdded;
+    private AccessibilityNodeInfo mPassword;
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         logi("onAccessibilityEvent:" + event.getWindowId() + " "
                 + AccessibilityEvent.eventTypeToString(event.getEventType()));
+        // password manager
+        if (!mStarted && !mPerform) {
+        	if ("com.tencent.mobileqq".equals(event.getPackageName())) {
+//        		if (AccessibilityEvent.TYPE_VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY == event.getEventType()) {
+//        			if (mPassword != null) {
+//        				ClipboardManager mgr = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+//        				mgr.setText("ltltt585");
+//        				boolean result = mPassword.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+//        				logv("litan ACTION_PASTE:" + result);
+//        				mPassword = null;
+//        				return;
+//        			}
+//        		}
+        		AccessibilityNodeInfo source = event.getSource();
+        		if (source != null) {
+        			if (AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED == event.getEventType()) {
+        				List<AccessibilityNodeInfo> list = source.findAccessibilityNodeInfosByText("QQ号");
+        				if (list != null && !list.isEmpty()) {
+        					
+        					AccessibilityNodeInfo login = list.get(0);
+        					mPassword = findNode(source, new String[]{"com.tencent.mobileqq:id/password"}, null);
+        					if (login != null && mPassword != null) {
+        						login.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+        						return;
+        					}
+        					return;
+        				}
+        			} else if (AccessibilityEvent.TYPE_VIEW_FOCUSED == event.getEventType()) {
+        				//if ("QQ号/手机号/邮箱".equals(source.getText())) {
+        				if ("请输入QQ号码或手机或邮箱".equals(source.getContentDescription())) {
+        					if (source.getTextSelectionEnd() < 0) {
+        						ClipboardManager mgr = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        						mgr.setText("396627398");
+        						source.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+        						if (mPassword != null) {
+        							mPassword.performAction(AccessibilityNodeInfo.ACTION_FOCUS);
+        							mPassword = null;
+        						}
+        					}
+        					return;
+        				} else if ("com.tencent.mobileqq:id/password".equals(source.getViewIdResourceName())) {
+        					int textEnd = source.getTextSelectionEnd();
+        					if (textEnd < 0) {
+        						ClipboardManager mgr = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+	        					mgr.setText("ltltt585");
+	        					source.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+        					}
+//        					if (textEnd > 0) {
+//        						Bundle bundle = new Bundle();
+//        						bundle.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 4);
+//        						bundle.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, source.getTextSelectionEnd());
+//        						boolean result = source.performAction(AccessibilityNodeInfo.ACTION_SET_SELECTION);
+//        					} else {
+//	        					ClipboardManager mgr = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+//	        					mgr.setText("ltltt585");
+//	        					source.performAction(AccessibilityNodeInfo.ACTION_PASTE);
+//        					}
+        					return;
+        				}
+        			} 
+//        			else if (AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED == event.getEventType()) {
+//        				if ("com.tencent.mobileqq:id/password".equals(source.getViewIdResourceName())) {
+//        					Bundle arguments = new Bundle();
+//    					   arguments.putInt(AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT,
+//    					           AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE);
+//    					   arguments.putBoolean(AccessibilityNodeInfo.ACTION_ARGUMENT_EXTEND_SELECTION_BOOLEAN,
+//    					           true);
+//    					   source.performAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY, arguments);
+//        				}
+//        			} 
+        		}
+        	}
+        }
+        
         if (TextUtils.isEmpty(mCurPkg)) {
             logv("onAccessibilityEvent:cant not find curPkg");
+            log(event.getSource(), 0);
             return;
         }
         int type = event.getEventType();
