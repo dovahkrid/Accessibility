@@ -26,6 +26,7 @@ public class AccessRecordXmlWriter {
 	public static final String TAG_RECORD = "record";
 	public static final String ATTR_RES = "res";
 	public static final String ATTR_TEXT = "txt";
+	public static final String ATTR_DES = "des";
 	public static final String ATTR_W_INDEX = "w-index";
 	public static final String ATTR_CHILD_DEPTH = "depth";
 	public static final String ATTR_RECT = "rect";
@@ -62,6 +63,7 @@ public class AccessRecordXmlWriter {
 							a.mText = parser.getAttributeValue(null, ATTR_TEXT);
 							a.mViewResName = parser.getAttributeValue(null,
 									ATTR_RES);
+							a.mDes = parser.getAttributeValue(null, ATTR_DES);
 							String childD = parser.getAttributeValue(null, ATTR_CHILD_DEPTH);
 							a.mChildDepth = childD == null ? 0 : Integer.valueOf(childD);
 							a.mWindowIndex = Integer.valueOf(parser
@@ -133,6 +135,7 @@ public class AccessRecordXmlWriter {
 				serializer.startTag(null, TAG_RECORD);
 				String res = record.getViewResName();
 				CharSequence text = record.getText();
+				CharSequence des = record.getContentDescription();
 				int wIndex = record.getWindowIndex();
 				Rect rect = record.getBoundsInScreen();
 				if (res != null) {
@@ -140,6 +143,9 @@ public class AccessRecordXmlWriter {
 				}
 				if (text != null) {
 					serializer.attribute(null, ATTR_TEXT, text.toString());
+				}
+				if (des != null) {
+				    serializer.attribute(null, ATTR_DES, des.toString());
 				}
 				serializer
 						.attribute(null, ATTR_W_INDEX, String.valueOf(wIndex));

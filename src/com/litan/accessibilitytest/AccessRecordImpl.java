@@ -10,6 +10,7 @@ public class AccessRecordImpl implements AccessRecord {
     CharSequence mPkgName;
     int mWindowIndex;
     Rect mBoundsInScreen;
+    CharSequence mDes;
     @Override
     public String getViewResName() {
         return mViewResName;
@@ -44,5 +45,9 @@ public class AccessRecordImpl implements AccessRecord {
 	public int getChildDepth() {
 		return mChildDepth;
 	}
-    
+
+    @Override
+    public CharSequence getContentDescription() {
+        return mDes;
+    }
 }

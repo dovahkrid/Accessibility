@@ -47,7 +47,7 @@ public class AccessibilityTestService extends AccessibilityService {
         Rect rect = new Rect();
         node.getBoundsInScreen(rect);
         logv(level + " node:" + node.getChildCount() + " " + node.getViewIdResourceName() + " "
-                + node.getText() + " bounds:" + rect + " clickable:" + node.isClickable());
+                + node.getText() + " bounds:" + rect + " clickable:" + node.isClickable() + "cd:" + node.getContentDescription());
         for (int i = 0; i < node.getChildCount(); i++) {
             AccessibilityNodeInfo n = node.getChild(i);
             log(n, level + 1);

@@ -7,6 +7,7 @@ public interface AccessRecord {
     int getEventType();
     CharSequence getPkgName();
    String getViewResName();
+   CharSequence getContentDescription();
    CharSequence getText();
    int getWindowIndex();
    Rect getBoundsInScreen();

@@ -173,6 +173,7 @@ public interface AccessRecordManager {
                     		record.mChildDepth = 1;
                     	}
                     }
+                    record.mDes = nodeInfo.getContentDescription();
                     record.mViewResName = viewResName;
                     record.mText = viewText;
                     record.mPkgName = nodeInfo.getPackageName();
@@ -244,7 +245,10 @@ public interface AccessRecordManager {
         private List<AccessibilityNodeInfo> mNodeList = new ArrayList<AccessibilityNodeInfo>();
         private LinkedList<AccessRecord> mCurPerformList;
 
-        private AccessibilityNodeInfo findNode(AccessibilityNodeInfo source, Rect rect) {
+        private AccessibilityNodeInfo findNode(AccessibilityNodeInfo source, Rect rect, String des) {
+            if (des != null && des.equals(source.getContentDescription())) {
+                return source;
+            }
             Rect r = new Rect();
             source.getBoundsInScreen(r);
             if (r.equals(rect)) {
@@ -253,7 +257,7 @@ public interface AccessRecordManager {
                 for (int i = 0; i < source.getChildCount(); i++) {
                     AccessibilityNodeInfo node = source.getChild(i);
                     if (node != null) {
-                        AccessibilityNodeInfo n = findNode(node, rect);
+                        AccessibilityNodeInfo n = findNode(node, rect, des);
                         if (n != null) {
                             return n;
                         }
@@ -263,18 +267,19 @@ public interface AccessRecordManager {
             return null;
         }
 
-        private AccessibilityNodeInfo findNode(AccessibilityNodeInfo source, String res, String text, Rect rect, WindowNode windowNode) {
-        	AccessibilityNodeInfo result;
+        private AccessibilityNodeInfo findNode(AccessibilityNodeInfo source, String res,
+                String text, Rect rect, WindowNode windowNode, String des) {
+            AccessibilityNodeInfo result;
         	if (source == null) {
         		return null;
         	}
-        	if (res == null && text == null) {
-        		result = findNode(source, rect);
+        	if ((res == null && text == null) || des != null) {
+        		result = findNode(source, rect, des);
         		if (result == null && windowNode != null) {
-        			result = findNode(windowNode.windowNode, rect);
+        			result = findNode(windowNode.windowNode, rect, des);
         			if (result == null && windowNode.contentNodes != null) {
         				for (AccessibilityNodeInfo n : windowNode.contentNodes) {
-        					result = findNode(n, rect);
+        					result = findNode(n, rect, des);
         					if (result != null) {
         						return result;
         					}
@@ -317,7 +322,10 @@ public interface AccessRecordManager {
                     if (record.getPkgName().equals(event.getPackageName())) {
                         String resName = record.getViewResName();
                         CharSequence text = record.getText();
-                        AccessibilityNodeInfo node = findNode(source, resName, text != null ? text.toString() : null, record.getBoundsInScreen(), null);
+                        String des = record.getContentDescription() == null ? null : record.getContentDescription().toString();
+                        AccessibilityNodeInfo node = findNode(source, resName,
+                                text != null ? text.toString() : null, record.getBoundsInScreen(),
+                                null, des);
                         if (node != null && record.getChildDepth() == 1) {
                         	// TODO: support 1 only now.
                         	node = node.getParent();
@@ -333,7 +341,7 @@ public interface AccessRecordManager {
                                     CharSequence rT = r.getText();
                                     AccessibilityNodeInfo n;
                                     if (rN == null && rT == null) {
-                                        n = findNode(source, r.getBoundsInScreen());
+                                        n = findNode(source, r.getBoundsInScreen(), des);
                                     } else {
                                         n = AccessibilityTestService.findNode(
                                                 source,
@@ -376,8 +384,9 @@ public interface AccessRecordManager {
                         String rN = r.getViewResName();
                         CharSequence rT = r.getText();
                         AccessibilityNodeInfo n;
+                        String des = r.getContentDescription() == null ? null : r.getContentDescription().toString();
                         if (rN == null && rT == null) {
-                            n = findNode(source, r.getBoundsInScreen());
+                            n = findNode(source, r.getBoundsInScreen(), des);
                         } else {
                             n = AccessibilityTestService.findNode(
                                     source,
